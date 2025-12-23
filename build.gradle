@@ -1,0 +1,66 @@
+plugins {
+    id 'org.springframework.boot' version '4.0.0' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+    id 'com.diffplug.spotless' version '6.25.0' apply false
+}
+
+group = 'com'
+version = '0.0.1-SNAPSHOT'
+description = 'zfb'
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.diffplug.spotless'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    configurations {
+        all {
+            exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        }
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom 'org.springframework.boot:spring-boot-dependencies:4.0.0'
+            mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2025.1.0'
+            mavenBom 'org.springframework.cloud:spring-cloud-kubernetes-dependencies:5.0.0'
+        }
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+
+    spotless {
+        java {
+            target 'src/**/*.java'
+            googleJavaFormat('1.22.0')
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+}
