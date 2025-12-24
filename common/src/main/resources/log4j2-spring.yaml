@@ -1,0 +1,140 @@
+Configuration:
+  status: WARN
+  monitorInterval: 30
+  Properties:
+    Property:
+      - name: LOG_PATTERN
+        value: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+      - name: LOG_PATH
+        value: "${sys:user.dir}/logs"
+      - name: APP_NAME
+        value: "zfb"
+
+  Appenders:
+    Console:
+      name: Console
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "${LOG_PATTERN}"
+
+    RollingFile:
+      - name: RollingFile
+        fileName: "${LOG_PATH}/${APP_NAME}.log"
+        filePattern: "${LOG_PATH}/${APP_NAME}-%d{yyyy-MM-dd}-%i.log.gz"
+        PatternLayout:
+          pattern: "${LOG_PATTERN}"
+        Policies:
+          TimeBasedTriggeringPolicy:
+            interval: 1
+            modulate: true
+          SizeBasedTriggeringPolicy:
+            size: "100MB"
+        DefaultRolloverStrategy:
+          max: 30
+          Delete:
+            basePath: "${LOG_PATH}"
+            maxDepth: 1
+            IfFileName:
+              glob: "${APP_NAME}-*.log.gz"
+            IfLastModified:
+              age: "30d"
+
+      - name: RollingFileError
+        fileName: "${LOG_PATH}/${APP_NAME}-error.log"
+        filePattern: "${LOG_PATH}/${APP_NAME}-error-%d{yyyy-MM-dd}-%i.log.gz"
+        PatternLayout:
+          pattern: "${LOG_PATTERN}"
+        Filters:
+          ThresholdFilter:
+            level: ERROR
+            onMatch: ACCEPT
+            onMismatch: DENY
+        Policies:
+          TimeBasedTriggeringPolicy:
+            interval: 1
+            modulate: true
+          SizeBasedTriggeringPolicy:
+            size: "100MB"
+        DefaultRolloverStrategy:
+          max: 30
+          Delete:
+            basePath: "${LOG_PATH}"
+            maxDepth: 1
+            IfFileName:
+              glob: "${APP_NAME}-error-*.log.gz"
+            IfLastModified:
+              age: "30d"
+
+    Async:
+      - name: AsyncConsole
+        AppenderRef:
+          - ref: Console
+
+      - name: AsyncFile
+        AppenderRef:
+          - ref: RollingFile
+
+      - name: AsyncError
+        AppenderRef:
+          - ref: RollingFileError
+
+  Loggers:
+    Logger:
+      - name: com.zfb
+        level: debug
+        additivity: false
+        AppenderRef:
+          - ref: AsyncConsole
+          - ref: AsyncFile
+          - ref: AsyncError
+
+      - name: org.springframework
+        level: info
+        additivity: false
+        AppenderRef:
+          - ref: AsyncConsole
+          - ref: AsyncFile
+
+      - name: org.hibernate
+        level: info
+        additivity: false
+        AppenderRef:
+          - ref: AsyncConsole
+          - ref: AsyncFile
+
+      - name: org.hibernate.SQL
+        level: debug
+        additivity: false
+        AppenderRef:
+          - ref: AsyncConsole
+          - ref: AsyncFile
+
+      - name: org.hibernate.type.descriptor.sql.BasicBinder
+        level: trace
+        additivity: false
+        AppenderRef:
+          - ref: AsyncConsole
+          - ref: AsyncFile
+
+      - name: org.apache.kafka
+        level: info
+        additivity: false
+        AppenderRef:
+          - ref: AsyncConsole
+          - ref: AsyncFile
+
+      - name: io.lettuce
+        level: info
+        additivity: false
+        AppenderRef:
+          - ref: AsyncConsole
+          - ref: AsyncFile
+
+    Root:
+      level: info
+      AppenderRef:
+        - ref: AsyncConsole
+        - ref: AsyncFile
+        - ref: AsyncError
+
+
