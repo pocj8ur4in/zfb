@@ -7,6 +7,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
@@ -28,17 +29,31 @@ public class JwtTokenProvider {
   @Value("${jwt.access-token-validity:3600000}")
   private long accessTokenValidity;
 
+  private SecretKey secretKey;
+
+  /** Initialize the secret key after properties are set */
+  @PostConstruct
+  public void init() {
+    this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+  }
+
   /**
-   * validate the token
+   * Parse the token once and extract all claims.
    *
    * @param token
-   * @return true if the token is valid, false otherwise
+   * @return JwtTokenClaims (with userId, email, roles) or null if token is invalid
    */
-  public boolean validateToken(String token) {
+  public JwtTokenClaims getAllClaimsFromToken(String token) {
     try {
-      SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-      Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-      return true;
+      Claims claims =
+          Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+
+      String userId = claims.getSubject();
+      String email = claims.get("email", String.class);
+      String rolesString = claims.get("roles", String.class);
+      List<String> roles = rolesString != null ? Arrays.asList(rolesString.split(",")) : List.of();
+
+      return new JwtTokenClaims(userId, email, roles);
     } catch (SignatureException e) {
       logger.error("Invalid JWT signature: {}", e.getMessage());
     } catch (MalformedJwtException e) {
@@ -50,33 +65,30 @@ public class JwtTokenProvider {
     } catch (IllegalArgumentException e) {
       logger.error("JWT claims string is empty: {}", e.getMessage());
     }
-    return false;
+    return null;
   }
 
-  public String getUserIdFromToken(String token) {
-    SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-    Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-    return claims.getSubject();
+  /**
+   * Validate the token
+   *
+   * @param token
+   * @return true if the token is valid, false otherwise
+   */
+  public boolean validateToken(String token) {
+    return getAllClaimsFromToken(token) != null;
   }
 
-  public String getEmailFromToken(String token) {
-    SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-    Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-    return claims.get("email", String.class);
-  }
-
-  public List<String> getRolesFromToken(String token) {
-    SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-    Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-    String roles = claims.get("roles", String.class);
-    return roles != null ? Arrays.asList(roles.split(",")) : List.of();
-  }
-
+  /**
+   * Generate a JWT token with the given user information.
+   *
+   * @param userId user ID to be set as the subject
+   * @param email user email
+   * @param roles user roles
+   * @return generated JWT token
+   */
   public String generateToken(String userId, String email, List<String> roles) {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + accessTokenValidity);
-
-    SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
     return Jwts.builder()
         .subject(userId)
@@ -84,7 +96,7 @@ public class JwtTokenProvider {
         .claim("roles", String.join(",", roles))
         .issuedAt(now)
         .expiration(expiryDate)
-        .signWith(key)
+        .signWith(secretKey)
         .compact();
   }
 }

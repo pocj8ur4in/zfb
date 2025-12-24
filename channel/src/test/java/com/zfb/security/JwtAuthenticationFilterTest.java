@@ -43,11 +43,10 @@ class JwtAuthenticationFilterTest {
     HttpServletResponse response = mock(HttpServletResponse.class);
     FilterChain filterChain = mock(FilterChain.class);
 
+    JwtTokenClaims claims = new JwtTokenClaims(userId, email, roles);
+
     when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-    when(tokenProvider.validateToken(token)).thenReturn(true);
-    when(tokenProvider.getUserIdFromToken(token)).thenReturn(userId);
-    when(tokenProvider.getEmailFromToken(token)).thenReturn(email);
-    when(tokenProvider.getRolesFromToken(token)).thenReturn(roles);
+    when(tokenProvider.getAllClaimsFromToken(token)).thenReturn(claims);
 
     // when
     jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -92,7 +91,7 @@ class JwtAuthenticationFilterTest {
     FilterChain filterChain = mock(FilterChain.class);
 
     when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-    when(tokenProvider.validateToken(token)).thenReturn(false);
+    when(tokenProvider.getAllClaimsFromToken(token)).thenReturn(null);
 
     // when
     jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -110,7 +109,7 @@ class JwtAuthenticationFilterTest {
     HttpServletResponse response = mock(HttpServletResponse.class);
     FilterChain filterChain = mock(FilterChain.class);
 
-    when(request.getHeader("Authorization")).thenReturn("invalid.jwt.token"); // Bearer 없음
+    when(request.getHeader("Authorization")).thenReturn("invalid.jwt.token");
 
     // when
     jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);

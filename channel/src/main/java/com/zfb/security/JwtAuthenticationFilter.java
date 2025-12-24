@@ -24,13 +24,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Autowired private JwtTokenProvider tokenProvider;
 
   /**
-   * filter to authenticate the request
+   * Filter to authenticate the request by parsing JWT token once and extracting all claims.
    *
    * @param request
    * @param response
    * @param filterChain
-   * @throws ServletException
-   * @throws IOException
+   * @throws ServletException if servlet error occurs
+   * @throws IOException if I/O error occurs
    */
   @Override
   protected void doFilterInternal(
@@ -40,22 +40,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     try {
       String jwt = getJwtFromRequest(request);
 
-      if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-        String userId = tokenProvider.getUserIdFromToken(jwt);
-        String email = tokenProvider.getEmailFromToken(jwt);
-        List<String> roles = tokenProvider.getRolesFromToken(jwt);
+      if (StringUtils.hasText(jwt)) {
+        JwtTokenClaims claims = tokenProvider.getAllClaimsFromToken(jwt);
 
-        JwtUserDetails userDetails = new JwtUserDetails(userId, email, roles);
-        UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        if (claims != null) {
+          String userId = claims.getUserId();
+          String email = claims.getEmail();
+          List<String> roles = claims.getRoles();
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+          JwtUserDetails userDetails = new JwtUserDetails(userId, email, roles);
+          UsernamePasswordAuthenticationToken authentication =
+              new UsernamePasswordAuthenticationToken(
+                  userDetails, null, userDetails.getAuthorities());
+          authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-        response.setHeader(SecurityConstants.HEADER_USER_ID, userId);
-        response.setHeader(SecurityConstants.HEADER_USER_EMAIL, email);
-        response.setHeader(SecurityConstants.HEADER_USER_ROLES, String.join(",", roles));
+          SecurityContextHolder.getContext().setAuthentication(authentication);
+
+          response.setHeader(SecurityConstants.HEADER_USER_ID, userId);
+          response.setHeader(SecurityConstants.HEADER_USER_EMAIL, email);
+          response.setHeader(SecurityConstants.HEADER_USER_ROLES, String.join(",", roles));
+        }
       }
     } catch (Exception ex) {
       logger.error("Could not set user authentication in security context", ex);

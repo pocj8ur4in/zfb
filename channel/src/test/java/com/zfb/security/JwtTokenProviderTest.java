@@ -19,6 +19,7 @@ class JwtTokenProviderTest {
     ReflectionTestUtils.setField(
         jwtTokenProvider, "jwtSecret", "test-secret-key-which-must-be-at-least-256-bits-long");
     ReflectionTestUtils.setField(jwtTokenProvider, "accessTokenValidity", 3600000L);
+    jwtTokenProvider.init();
   }
 
   @Test
@@ -34,54 +35,6 @@ class JwtTokenProviderTest {
 
     // then
     assertThat(token).isNotNull().isNotEmpty();
-  }
-
-  @Test
-  @DisplayName("get user id from token success")
-  void getUserIdFromToken_Success() {
-    // given
-    String userId = "user123";
-    String email = "test@example.com";
-    List<String> roles = Arrays.asList("ROLE_USER");
-    String token = jwtTokenProvider.generateToken(userId, email, roles);
-
-    // when
-    String extractedUserId = jwtTokenProvider.getUserIdFromToken(token);
-
-    // then
-    assertThat(extractedUserId).isEqualTo(userId);
-  }
-
-  @Test
-  @DisplayName("get email from token success")
-  void getEmailFromToken_Success() {
-    // given
-    String userId = "user123";
-    String email = "test@example.com";
-    List<String> roles = Arrays.asList("ROLE_USER");
-    String token = jwtTokenProvider.generateToken(userId, email, roles);
-
-    // when
-    String extractedEmail = jwtTokenProvider.getEmailFromToken(token);
-
-    // then
-    assertThat(extractedEmail).isEqualTo(email);
-  }
-
-  @Test
-  @DisplayName("get roles from token success")
-  void getRolesFromToken_Success() {
-    // given
-    String userId = "user123";
-    String email = "test@example.com";
-    List<String> roles = Arrays.asList("ROLE_USER", "ROLE_ADMIN");
-    String token = jwtTokenProvider.generateToken(userId, email, roles);
-
-    // when
-    List<String> extractedRoles = jwtTokenProvider.getRolesFromToken(token);
-
-    // then
-    assertThat(extractedRoles).containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN");
   }
 
   @Test
@@ -120,7 +73,8 @@ class JwtTokenProviderTest {
     JwtTokenProvider expiredTokenProvider = new JwtTokenProvider();
     ReflectionTestUtils.setField(
         expiredTokenProvider, "jwtSecret", "test-secret-key-which-must-be-at-least-256-bits-long");
-    ReflectionTestUtils.setField(expiredTokenProvider, "accessTokenValidity", -1L); // 즉시 만료
+    ReflectionTestUtils.setField(expiredTokenProvider, "accessTokenValidity", -1L);
+    expiredTokenProvider.init();
 
     String token =
         expiredTokenProvider.generateToken("user123", "test@example.com", List.of("ROLE_USER"));
@@ -130,5 +84,57 @@ class JwtTokenProviderTest {
 
     // then
     assertThat(isValid).isFalse();
+  }
+
+  @Test
+  @DisplayName("get all claims from token success")
+  void getAllClaimsFromToken_Success() {
+    // given
+    String userId = "user123";
+    String email = "test@example.com";
+    List<String> roles = Arrays.asList("ROLE_USER", "ROLE_ADMIN");
+    String token = jwtTokenProvider.generateToken(userId, email, roles);
+
+    // when
+    JwtTokenClaims claims = jwtTokenProvider.getAllClaimsFromToken(token);
+
+    // then
+    assertThat(claims).isNotNull();
+    assertThat(claims.getUserId()).isEqualTo(userId);
+    assertThat(claims.getEmail()).isEqualTo(email);
+    assertThat(claims.getRoles()).containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN");
+  }
+
+  @Test
+  @DisplayName("get all claims from token invalid token returns null")
+  void getAllClaimsFromToken_InvalidToken_ReturnsNull() {
+    // given
+    String invalidToken = "invalid.jwt.token";
+
+    // when
+    JwtTokenClaims claims = jwtTokenProvider.getAllClaimsFromToken(invalidToken);
+
+    // then
+    assertThat(claims).isNull();
+  }
+
+  @Test
+  @DisplayName("get all claims from token expired token returns null")
+  void getAllClaimsFromToken_ExpiredToken_ReturnsNull() {
+    // given
+    JwtTokenProvider expiredTokenProvider = new JwtTokenProvider();
+    ReflectionTestUtils.setField(
+        expiredTokenProvider, "jwtSecret", "test-secret-key-which-must-be-at-least-256-bits-long");
+    ReflectionTestUtils.setField(expiredTokenProvider, "accessTokenValidity", -1L);
+    expiredTokenProvider.init();
+
+    String token =
+        expiredTokenProvider.generateToken("user123", "test@example.com", List.of("ROLE_USER"));
+
+    // when
+    JwtTokenClaims claims = jwtTokenProvider.getAllClaimsFromToken(token);
+
+    // then
+    assertThat(claims).isNull();
   }
 }
