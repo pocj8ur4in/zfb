@@ -21,26 +21,26 @@ public class DistributedLockService {
   private final RedissonClient redissonClient;
 
   /**
-   * Acquire distributed lock and execute task
+   * Acquire distributed lock and execute task with default timeout
    *
    * @param lockKey
-   * @param supplier Task to execute
+   * @param supplier Task to execute while holding the lock
    * @return Result of task execution
-   * @throws RuntimeException If lock acquisition fails
+   * @throws LockAcquisitionException If lock acquisition fails after waiting
    */
   public <T> T executeWithLock(String lockKey, Supplier<T> supplier) {
     return executeWithLock(lockKey, DEFAULT_WAIT_TIME, DEFAULT_LEASE_TIME, supplier);
   }
 
   /**
-   * Acquire distributed lock and execute task with timeout
+   * Acquire distributed lock and execute task with custom timeout
    *
    * @param lockKey
-   * @param waitTime Seconds to wait for lock available
-   * @param leaseTime Seconds to hold the lock
+   * @param waitTime Maximum seconds to wait for lock availability
+   * @param leaseTime Maximum seconds to hold the lock before auto release
    * @param supplier Task to execute
    * @return Result of task execution
-   * @throws RuntimeException If lock acquisition fails
+   * @throws LockAcquisitionException If lock acquisition fails after waiting
    */
   public <T> T executeWithLock(
       String lockKey, long waitTime, long leaseTime, Supplier<T> supplier) {
@@ -52,8 +52,12 @@ public class DistributedLockService {
       boolean acquired = lock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS);
 
       if (!acquired) {
-        logger.error("Failed to acquire lock: {}", fullKey);
-        throw new RuntimeException("Failed to acquire distributed lock: " + lockKey);
+        logger.error(
+            "Failed to acquire distributed lock after {} seconds (key hash: {})",
+            waitTime,
+            sanitizeKeyForLogging(lockKey));
+        throw new LockAcquisitionException(
+            "Failed to acquire distributed lock after " + waitTime + " seconds");
       }
 
       logger.debug("Lock acquired: {}", fullKey);
@@ -61,8 +65,11 @@ public class DistributedLockService {
 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.error("Thread interrupted while acquiring lock: {}", fullKey, e);
-      throw new RuntimeException("Lock acquisition interrupted", e);
+      logger.error(
+          "Thread interrupted while acquiring lock (key hash: {})",
+          sanitizeKeyForLogging(lockKey),
+          e);
+      throw new LockAcquisitionException("Lock acquisition interrupted", e);
     } finally {
       if (lock.isHeldByCurrentThread()) {
         lock.unlock();
@@ -72,12 +79,12 @@ public class DistributedLockService {
   }
 
   /**
-   * Execute task without lock
+   * Try to execute task with lock without waiting. Returns default value if lock is not available.
    *
-   * @param lockKey
-   * @param supplier Task to execute
-   * @param defaultValue Default value to return if lock acquisition fails
-   * @return Result of task execution or default value
+   * @param lockKey Lock identifier (must NOT contain sensitive information)
+   * @param supplier Task to execute while holding the lock
+   * @param defaultValue Default value to return if lock acquisition fails immediately
+   * @return Result of task execution or default value if lock not available
    */
   public <T> T tryExecuteWithLock(String lockKey, Supplier<T> supplier, T defaultValue) {
     String fullKey = LOCK_PREFIX + lockKey;
@@ -87,7 +94,9 @@ public class DistributedLockService {
       boolean acquired = lock.tryLock(0, DEFAULT_LEASE_TIME, TimeUnit.SECONDS);
 
       if (!acquired) {
-        logger.warn("Lock not acquired, returning default value: {}", fullKey);
+        logger.warn(
+            "Lock not immediately available, returning default value (key hash: {})",
+            sanitizeKeyForLogging(lockKey));
         return defaultValue;
       }
 
@@ -96,7 +105,10 @@ public class DistributedLockService {
 
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.error("Thread interrupted while acquiring lock: {}", fullKey, e);
+      logger.error(
+          "Thread interrupted while acquiring lock (key hash: {})",
+          sanitizeKeyForLogging(lockKey),
+          e);
       return defaultValue;
     } finally {
       if (lock.isHeldByCurrentThread()) {
@@ -104,5 +116,22 @@ public class DistributedLockService {
         logger.debug("Lock released: {}", fullKey);
       }
     }
+  }
+
+  /**
+   * Sanitize lock key for safe logging by creating a hash.
+   *
+   * <p>This prevents accidental exposure of sensitive information in logs while still providing a
+   * unique identifier for debugging.
+   *
+   * @param lockKey Original lock key
+   * @return Sanitized hash representation of the key
+   */
+  private String sanitizeKeyForLogging(String lockKey) {
+    if (lockKey == null || lockKey.isEmpty()) {
+      return "null";
+    }
+    // Use simple hash code for correlation in logs without exposing actual key
+    return String.format("0x%08x", lockKey.hashCode());
   }
 }

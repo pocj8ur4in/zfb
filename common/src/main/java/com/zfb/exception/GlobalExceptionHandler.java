@@ -157,6 +157,20 @@ public class GlobalExceptionHandler {
   }
 
   /**
+   * Handle for distributed lock acquisition failures
+   *
+   * @param e LockAcquisitionException
+   * @return ResponseEntity with ApiResponse
+   */
+  @ExceptionHandler(com.zfb.lock.LockAcquisitionException.class)
+  public ResponseEntity<ApiResponse<Object>> handleLockAcquisitionException(
+      com.zfb.lock.LockAcquisitionException e) {
+    log.warn("Lock acquisition failed: {}", e.getMessage());
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+        .body(ApiResponse.error("Resource is temporarily unavailable due to concurrent access"));
+  }
+
+  /**
    * Handle for illegal argument exceptions
    *
    * @param e IllegalArgumentException
