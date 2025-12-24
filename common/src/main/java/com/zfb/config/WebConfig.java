@@ -8,11 +8,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-  @Value("${common.cors.allowed-origins:*}")
+  @Value("${common.cors.allowed-origins:}")
   private String allowedOrigins;
 
   @Override
   public void addCorsMappings(CorsRegistry registry) {
+    if (allowedOrigins == null || allowedOrigins.trim().isEmpty()) {
+      return;
+    }
+
     registry
         .addMapping("/**")
         .allowedOrigins(allowedOrigins.split(","))
