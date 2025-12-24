@@ -1,0 +1,40 @@
+Configuration:
+  status: WARN
+  Properties:
+    Property:
+      - name: LOG_PATTERN
+        value: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight{%-5level} %style{%logger{36}}{cyan} - %msg%n"
+
+  Appenders:
+    Console:
+      name: Console
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "${LOG_PATTERN}"
+
+  Loggers:
+    Logger:
+      - name: com.zfb
+        level: debug
+        additivity: false
+        AppenderRef:
+          - ref: Console
+
+      - name: org.springframework
+        level: info
+        additivity: false
+        AppenderRef:
+          - ref: Console
+
+      - name: org.hibernate.SQL
+        level: debug
+        additivity: false
+        AppenderRef:
+          - ref: Console
+
+    Root:
+      level: info
+      AppenderRef:
+        - ref: Console
+
+
