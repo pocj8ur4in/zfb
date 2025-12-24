@@ -31,20 +31,21 @@ public class RedissonConfig {
   public RedissonClient redissonClient() {
     Config config = new Config();
 
-    config
-        .useSingleServer()
-        .setAddress(String.format("redis://%s:%d", redisHost, redisPort))
-        .setDatabase(redisDatabase)
-        .setConnectionPoolSize(64)
-        .setConnectionMinimumIdleSize(10)
-        .setIdleConnectionTimeout(10000)
-        .setConnectTimeout(10000)
-        .setTimeout(3000)
-        .setRetryAttempts(3)
-        .setRetryInterval(1500);
+    var serverConfig =
+        config
+            .useSingleServer()
+            .setAddress(String.format("redis://%s:%d", redisHost, redisPort))
+            .setDatabase(redisDatabase)
+            .setConnectionPoolSize(64)
+            .setConnectionMinimumIdleSize(10)
+            .setIdleConnectionTimeout(10000)
+            .setConnectTimeout(10000)
+            .setTimeout(3000)
+            .setRetryAttempts(3)
+            .setRetryInterval(1500);
 
     if (redisPassword != null && !redisPassword.isEmpty()) {
-      config.useSingleServer().setPassword(redisPassword);
+      serverConfig.setPassword(redisPassword);
     }
 
     return Redisson.create(config);
