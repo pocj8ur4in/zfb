@@ -348,4 +348,18 @@ public class CurrentAccountService {
         .findByAccountUuidOrderByCreatedAtDesc(account.getUuid(), pageable)
         .map(CurrentTransactionDto::from);
   }
+
+  /**
+   * verify a transaction by transaction uuid
+   *
+   * @param transactionUuid transaction uuid
+   * @return transaction verification
+   */
+  @Transactional(readOnly = true)
+  public TransactionVerification verifyByTransactionUuid(String transactionUuid) {
+    return transactionRepository
+        .findByUuid(transactionUuid)
+        .map(TransactionVerification::from)
+        .orElse(TransactionVerification.notFound());
+  }
 }

@@ -68,4 +68,11 @@ public class CurrentAccountController {
         accountService.getTransactionHistory(uuid, pageable);
     return ResponseEntity.ok(ApiResponse.success(transactions));
   }
+
+  @GetMapping("/transactions/{transactionUuid}/verify")
+  public ResponseEntity<ApiResponse<TransactionVerification>> verifyByTransactionUuid(
+      @PathVariable String transactionUuid) {
+    TransactionVerification verification = accountService.verifyByTransactionUuid(transactionUuid);
+    return ResponseEntity.ok(ApiResponse.success(verification));
+  }
 }
