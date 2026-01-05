@@ -337,8 +337,7 @@ public class CurrentAccountService {
    * @return page of transactions
    */
   @Transactional(readOnly = true)
-  public Page<CurrentTransactionDto> getTransactionHistory(
-      String accountUuid, Pageable pageable) {
+  public Page<CurrentTransactionDto> getTransactionHistory(String accountUuid, Pageable pageable) {
     CurrentAccount account =
         accountRepository
             .findByUuid(accountUuid)

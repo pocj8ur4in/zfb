@@ -64,8 +64,7 @@ public class CurrentAccountController {
   @GetMapping("/{uuid}/transactions")
   public ResponseEntity<ApiResponse<Page<CurrentTransactionDto>>> getTransactionHistory(
       @PathVariable String uuid, Pageable pageable) {
-    Page<CurrentTransactionDto> transactions =
-        accountService.getTransactionHistory(uuid, pageable);
+    Page<CurrentTransactionDto> transactions = accountService.getTransactionHistory(uuid, pageable);
     return ResponseEntity.ok(ApiResponse.success(transactions));
   }
 
