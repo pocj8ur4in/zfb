@@ -44,4 +44,11 @@ public class CurrentAccountController {
     CurrentTransactionDto transaction = accountService.withdraw(uuid, request);
     return ResponseEntity.ok(ApiResponse.success("withdraw completed successfully", transaction));
   }
+
+  @PostMapping("/{uuid}/deposit")
+  public ResponseEntity<ApiResponse<CurrentTransactionDto>> deposit(
+      @PathVariable String uuid, @Valid @RequestBody DepositRequest request) {
+    CurrentTransactionDto transaction = accountService.deposit(uuid, request);
+    return ResponseEntity.ok(ApiResponse.success("deposit completed successfully", transaction));
+  }
 }
