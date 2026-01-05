@@ -23,4 +23,10 @@ public class CurrentAccountController {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(ApiResponse.success("account created successfully", account));
   }
+
+  @GetMapping("/{uuid}")
+  public ResponseEntity<ApiResponse<CurrentAccountDto>> getAccount(@PathVariable String uuid) {
+    CurrentAccountDto account = accountService.getAccount(uuid);
+    return ResponseEntity.ok(ApiResponse.success(account));
+  }
 }

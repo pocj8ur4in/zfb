@@ -4,6 +4,7 @@ import com.zfb.current.domain.CurrentAccount;
 import com.zfb.current.dto.*;
 import com.zfb.current.repository.CurrentAccountRepository;
 import com.zfb.current.repository.CurrentTransactionRepository;
+import com.zfb.exception.BusinessException;
 import java.math.BigDecimal;
 import java.util.Random;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,22 @@ public class CurrentAccountService {
     log.info("created current account: {}", saved.getAccountNumber());
 
     return CurrentAccountDto.from(saved);
+  }
+
+  /**
+   * get a current account by uuid
+   *
+   * @param uuid
+   * @return
+   */
+  @Transactional(readOnly = true)
+  public CurrentAccountDto getAccount(String uuid) {
+    CurrentAccount account =
+        accountRepository
+            .findByUuid(uuid)
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    return CurrentAccountDto.from(account);
   }
 
   /**
