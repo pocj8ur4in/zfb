@@ -37,4 +37,11 @@ public class CurrentAccountController {
     List<CurrentAccountDto> accounts = accountService.getAccountsByUserUuid(userUuid);
     return ResponseEntity.ok(ApiResponse.success(accounts));
   }
+
+  @PostMapping("/{uuid}/withdraw")
+  public ResponseEntity<ApiResponse<CurrentTransactionDto>> withdraw(
+      @PathVariable String uuid, @Valid @RequestBody WithdrawRequest request) {
+    CurrentTransactionDto transaction = accountService.withdraw(uuid, request);
+    return ResponseEntity.ok(ApiResponse.success("withdraw completed successfully", transaction));
+  }
 }

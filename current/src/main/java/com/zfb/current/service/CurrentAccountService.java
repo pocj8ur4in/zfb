@@ -1,6 +1,7 @@
 package com.zfb.current.service;
 
 import com.zfb.current.domain.CurrentAccount;
+import com.zfb.current.domain.CurrentAccountTransaction;
 import com.zfb.current.dto.*;
 import com.zfb.current.repository.CurrentAccountRepository;
 import com.zfb.current.repository.CurrentTransactionRepository;
@@ -110,5 +111,71 @@ public class CurrentAccountService {
     int checksum = (10 - (sum % 10)) % 10;
 
     return accountNumber.append(checksum).toString();
+  }
+
+  /**
+   * withdraw money from account
+   *
+   * @param uuid account uuid
+   * @param request withdraw request
+   * @return transaction dto
+   */
+  @Transactional
+  public CurrentTransactionDto withdraw(String uuid, WithdrawRequest request) {
+    CurrentAccount account =
+        accountRepository
+            .findByUuidWithLock(uuid)
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    BigDecimal balanceBefore = account.getBalance();
+
+    // create transaction record
+    CurrentAccountTransaction transaction =
+        CurrentAccountTransaction.builder()
+            .accountUuid(account.getUuid())
+            .type(CurrentAccountTransaction.TransactionType.WITHDRAW)
+            .amount(request.getAmount())
+            .balanceBefore(balanceBefore)
+            .status(CurrentAccountTransaction.TransactionStatus.PENDING)
+            .clientRequestUuid(request.getClientRequestUuid())
+            .sagaUuid(request.getSagaUuid())
+            .description(request.getDescription())
+            .build();
+
+    try {
+      // withdraw from account
+      account.withdraw(request.getAmount());
+
+      // update transaction
+      transaction.complete();
+      BigDecimal balanceAfter = account.getBalance();
+      transaction =
+          CurrentAccountTransaction.builder()
+              .accountUuid(transaction.getAccountUuid())
+              .type(transaction.getType())
+              .amount(transaction.getAmount())
+              .balanceBefore(transaction.getBalanceBefore())
+              .balanceAfter(balanceAfter)
+              .status(transaction.getStatus())
+              .clientRequestUuid(transaction.getClientRequestUuid())
+              .sagaUuid(transaction.getSagaUuid())
+              .description(transaction.getDescription())
+              .build();
+
+      CurrentAccountTransaction saved = transactionRepository.save(transaction);
+      log.info(
+          "withdraw completed: account={}, amount={}, balance={} -> {}",
+          account.getAccountNumber(),
+          request.getAmount(),
+          balanceBefore,
+          balanceAfter);
+
+      return CurrentTransactionDto.from(saved);
+    } catch (Exception e) {
+      transaction.fail(e.getMessage());
+      transactionRepository.save(transaction);
+      log.error("withdraw failed: {}", e.getMessage());
+      throw new BusinessException(e.getMessage());
+    }
   }
 }
