@@ -12,6 +12,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -325,5 +327,25 @@ public class CurrentAccountService {
       log.error("refund failed: {}", e.getMessage());
       throw new BusinessException(e.getMessage());
     }
+  }
+
+  /**
+   * get transaction history for an account
+   *
+   * @param accountUuid account uuid
+   * @param pageable pageable object
+   * @return page of transactions
+   */
+  @Transactional(readOnly = true)
+  public Page<CurrentTransactionDto> getTransactionHistory(
+      String accountUuid, Pageable pageable) {
+    CurrentAccount account =
+        accountRepository
+            .findByUuid(accountUuid)
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    return transactionRepository
+        .findByAccountUuidOrderByCreatedAtDesc(account.getUuid(), pageable)
+        .map(CurrentTransactionDto::from);
   }
 }

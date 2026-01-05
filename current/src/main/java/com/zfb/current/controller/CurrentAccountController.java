@@ -6,6 +6,8 @@ import com.zfb.dto.ApiResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,5 +59,13 @@ public class CurrentAccountController {
       @PathVariable String transactionUuid, @RequestParam String reason) {
     CurrentTransactionDto transaction = accountService.refund(transactionUuid, reason);
     return ResponseEntity.ok(ApiResponse.success("refund completed", transaction));
+  }
+
+  @GetMapping("/{uuid}/transactions")
+  public ResponseEntity<ApiResponse<Page<CurrentTransactionDto>>> getTransactionHistory(
+      @PathVariable String uuid, Pageable pageable) {
+    Page<CurrentTransactionDto> transactions =
+        accountService.getTransactionHistory(uuid, pageable);
+    return ResponseEntity.ok(ApiResponse.success(transactions));
   }
 }
