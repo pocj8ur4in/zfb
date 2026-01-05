@@ -75,4 +75,12 @@ public class CurrentAccountController {
     TransactionVerification verification = accountService.verifyByTransactionUuid(transactionUuid);
     return ResponseEntity.ok(ApiResponse.success(verification));
   }
+
+  @GetMapping("/transactions/verify")
+  public ResponseEntity<ApiResponse<TransactionVerification>> verifyByClientRequestUuid(
+      @RequestParam String clientRequestUuid) {
+    TransactionVerification verification =
+        accountService.verifyByClientRequestUuid(clientRequestUuid);
+    return ResponseEntity.ok(ApiResponse.success(verification));
+  }
 }

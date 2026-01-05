@@ -362,4 +362,18 @@ public class CurrentAccountService {
         .map(TransactionVerification::from)
         .orElse(TransactionVerification.notFound());
   }
+
+  /**
+   * verify a transaction by client request uuid
+   *
+   * @param clientRequestUuid client request uuid
+   * @return transaction verification
+   */
+  @Transactional(readOnly = true)
+  public TransactionVerification verifyByClientRequestUuid(String clientRequestUuid) {
+    return transactionRepository
+        .findByClientRequestUuid(clientRequestUuid)
+        .map(TransactionVerification::from)
+        .orElse(TransactionVerification.notFound());
+  }
 }

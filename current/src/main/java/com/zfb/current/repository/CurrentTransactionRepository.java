@@ -11,6 +11,8 @@ public interface CurrentTransactionRepository
 
   Optional<CurrentAccountTransaction> findByUuid(String uuid);
 
+  Optional<CurrentAccountTransaction> findByClientRequestUuid(String clientRequestUuid);
+
   Page<CurrentAccountTransaction> findByAccountUuidOrderByCreatedAtDesc(
       String accountUuid, Pageable pageable);
 }
