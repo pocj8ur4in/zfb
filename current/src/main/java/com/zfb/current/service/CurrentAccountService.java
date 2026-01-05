@@ -35,7 +35,7 @@ public class CurrentAccountService {
     CurrentAccount account =
         CurrentAccount.builder()
             .accountNumber(accountNumber)
-            .userId(request.getUserId())
+            .userUuid(request.getUserUuid())
             .balance(BigDecimal.ZERO)
             .status(CurrentAccount.AccountStatus.ACTIVE)
             .build();

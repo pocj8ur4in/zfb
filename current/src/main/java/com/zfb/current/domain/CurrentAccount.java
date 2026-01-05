@@ -22,7 +22,7 @@ public class CurrentAccount extends BaseColumn {
   private String accountNumber;
 
   @Column(nullable = false)
-  private Long userId;
+  private String userUuid;
 
   @Column(nullable = false, precision = 19, scale = 2)
   private BigDecimal balance;
@@ -33,9 +33,9 @@ public class CurrentAccount extends BaseColumn {
 
   @Builder
   public CurrentAccount(
-      String accountNumber, Long userId, BigDecimal balance, AccountStatus status) {
+      String accountNumber, String userUuid, BigDecimal balance, AccountStatus status) {
     this.accountNumber = accountNumber;
-    this.userId = userId;
+    this.userUuid = userUuid;
     this.balance = balance != null ? balance : BigDecimal.ZERO;
     this.status = status != null ? status : AccountStatus.ACTIVE;
   }

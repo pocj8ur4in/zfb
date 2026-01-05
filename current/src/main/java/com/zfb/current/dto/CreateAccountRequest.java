@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateAccountRequest {
 
-  @NotNull(message = "user id is required")
-  private Long userId;
+  @NotNull(message = "user uuid is required")
+  private String userUuid;
 }

@@ -17,8 +17,8 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "current_account_transactions",
     indexes = {
-      @Index(name = "idx_account_id", columnList = "accountId"),
-      @Index(name = "idx_client_request_id", columnList = "clientRequestId"),
+      @Index(name = "idx_account_uuid", columnList = "accountUuid"),
+      @Index(name = "idx_client_request_uuid", columnList = "clientRequestUuid"),
       @Index(name = "idx_status_created", columnList = "status,createdAt")
     })
 @Getter
@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 public class CurrentAccountTransaction extends BaseColumn {
 
   @Column(nullable = false)
-  private Long accountId;
+  private String accountUuid;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
@@ -45,34 +45,34 @@ public class CurrentAccountTransaction extends BaseColumn {
   @Column(nullable = false, length = 20)
   private TransactionStatus status;
 
-  @Column(unique = true, length = 100)
-  private String clientRequestId;
+  @Column(name = "client_request_uuid", unique = true, length = 100)
+  private String clientRequestUuid;
 
-  @Column(length = 100)
-  private String sagaId;
+  @Column(name = "saga_uuid", length = 100)
+  private String sagaUuid;
 
   @Column(length = 500)
   private String description;
 
   @Builder
   public CurrentAccountTransaction(
-      Long accountId,
+      String accountUuid,
       TransactionType type,
       BigDecimal amount,
       BigDecimal balanceBefore,
       BigDecimal balanceAfter,
       TransactionStatus status,
-      String clientRequestId,
-      String sagaId,
+      String clientRequestUuid,
+      String sagaUuid,
       String description) {
-    this.accountId = accountId;
+    this.accountUuid = accountUuid;
     this.type = type;
     this.amount = amount;
     this.balanceBefore = balanceBefore;
     this.balanceAfter = balanceAfter;
     this.status = status != null ? status : TransactionStatus.PENDING;
-    this.clientRequestId = clientRequestId;
-    this.sagaId = sagaId;
+    this.clientRequestUuid = clientRequestUuid;
+    this.sagaUuid = sagaUuid;
     this.description = description;
   }
 

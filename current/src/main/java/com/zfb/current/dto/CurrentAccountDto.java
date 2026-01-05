@@ -9,9 +9,9 @@ import lombok.Getter;
 @Getter
 @Builder
 public class CurrentAccountDto {
-  private Long id;
+  private String uuid;
   private String accountNumber;
-  private Long userId;
+  private String userUuid;
   private BigDecimal balance;
   private String status;
   private LocalDateTime createdAt;
@@ -19,9 +19,9 @@ public class CurrentAccountDto {
 
   public static CurrentAccountDto from(CurrentAccount account) {
     return CurrentAccountDto.builder()
-        .id(account.getId())
+        .uuid(account.getUuid())
         .accountNumber(account.getAccountNumber())
-        .userId(account.getUserId())
+        .userUuid(account.getUserUuid())
         .balance(account.getBalance())
         .status(account.getStatus().name())
         .createdAt(account.getCreatedAt())
