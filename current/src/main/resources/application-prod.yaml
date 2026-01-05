@@ -1,0 +1,33 @@
+server:
+  port: 8081
+  shutdown: graceful
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+  docker:
+    compose:
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.zfb: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: never

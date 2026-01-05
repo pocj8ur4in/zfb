@@ -2,3 +2,4 @@ rootProject.name = 'zfb'
 
 include 'common'
 include 'channel'
+include 'current'
