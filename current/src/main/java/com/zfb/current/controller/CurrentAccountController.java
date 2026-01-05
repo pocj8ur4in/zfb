@@ -51,4 +51,11 @@ public class CurrentAccountController {
     CurrentTransactionDto transaction = accountService.deposit(uuid, request);
     return ResponseEntity.ok(ApiResponse.success("deposit completed successfully", transaction));
   }
+
+  @PostMapping("/transactions/{transactionUuid}/refund")
+  public ResponseEntity<ApiResponse<CurrentTransactionDto>> refund(
+      @PathVariable String transactionUuid, @RequestParam String reason) {
+    CurrentTransactionDto transaction = accountService.refund(transactionUuid, reason);
+    return ResponseEntity.ok(ApiResponse.success("refund completed", transaction));
+  }
 }

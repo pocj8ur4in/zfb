@@ -244,4 +244,86 @@ public class CurrentAccountService {
       throw new BusinessException(e.getMessage());
     }
   }
+
+  /**
+   * refund a transaction
+   *
+   * @param transactionUuid transaction uuid
+   * @param reason refund reason
+   * @return transaction dto
+   */
+  @Transactional
+  public CurrentTransactionDto refund(String transactionUuid, String reason) {
+    CurrentAccountTransaction originalTransaction =
+        transactionRepository
+            .findByUuid(transactionUuid)
+            .orElseThrow(() -> new BusinessException("transaction not found"));
+
+    if (originalTransaction.getStatus() != CurrentAccountTransaction.TransactionStatus.COMPLETED) {
+      throw new BusinessException("can only refund completed transactions");
+    }
+
+    CurrentAccount account =
+        accountRepository
+            .findByUuidWithLock(originalTransaction.getAccountUuid())
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    BigDecimal balanceBefore = account.getBalance();
+
+    // create refund transaction
+    CurrentAccountTransaction refundTransaction =
+        CurrentAccountTransaction.builder()
+            .accountUuid(account.getUuid())
+            .type(CurrentAccountTransaction.TransactionType.REFUND)
+            .amount(originalTransaction.getAmount())
+            .balanceBefore(balanceBefore)
+            .status(CurrentAccountTransaction.TransactionStatus.PENDING)
+            .description("Refund for transaction " + originalTransaction.getUuid() + ": " + reason)
+            .build();
+
+    try {
+      // refund based on original transaction type
+      switch (originalTransaction.getType()) {
+        case WITHDRAW:
+          account.deposit(originalTransaction.getAmount());
+          break;
+        case DEPOSIT:
+          account.withdraw(originalTransaction.getAmount());
+          break;
+        default:
+          throw new BusinessException("cannot refund a refund transaction");
+      }
+
+      // update transaction
+      refundTransaction.complete();
+      BigDecimal balanceAfter = account.getBalance();
+      refundTransaction =
+          CurrentAccountTransaction.builder()
+              .accountUuid(refundTransaction.getAccountUuid())
+              .type(refundTransaction.getType())
+              .amount(refundTransaction.getAmount())
+              .balanceBefore(refundTransaction.getBalanceBefore())
+              .balanceAfter(balanceAfter)
+              .status(refundTransaction.getStatus())
+              .clientRequestUuid(refundTransaction.getClientRequestUuid())
+              .sagaUuid(refundTransaction.getSagaUuid())
+              .description(refundTransaction.getDescription())
+              .build();
+
+      CurrentAccountTransaction saved = transactionRepository.save(refundTransaction);
+      log.info(
+          "refund completed: account={}, amount={}, balance={} -> {}",
+          account.getAccountNumber(),
+          originalTransaction.getAmount(),
+          balanceBefore,
+          balanceAfter);
+
+      return CurrentTransactionDto.from(saved);
+    } catch (Exception e) {
+      refundTransaction.fail(e.getMessage());
+      transactionRepository.save(refundTransaction);
+      log.error("refund failed: {}", e.getMessage());
+      throw new BusinessException(e.getMessage());
+    }
+  }
 }

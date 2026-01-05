@@ -1,7 +1,11 @@
 package com.zfb.current.repository;
 
 import com.zfb.current.domain.CurrentAccountTransaction;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CurrentTransactionRepository
-    extends JpaRepository<CurrentAccountTransaction, Long> {}
+    extends JpaRepository<CurrentAccountTransaction, Long> {
+
+  Optional<CurrentAccountTransaction> findByUuid(String uuid);
+}
