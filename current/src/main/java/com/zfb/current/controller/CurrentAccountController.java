@@ -4,6 +4,7 @@ import com.zfb.current.dto.*;
 import com.zfb.current.service.CurrentAccountService;
 import com.zfb.dto.ApiResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,5 +29,12 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<CurrentAccountDto>> getAccount(@PathVariable String uuid) {
     CurrentAccountDto account = accountService.getAccount(uuid);
     return ResponseEntity.ok(ApiResponse.success(account));
+  }
+
+  @GetMapping("/user/{userUuid}")
+  public ResponseEntity<ApiResponse<List<CurrentAccountDto>>> getAccountsByUserUuid(
+      @PathVariable String userUuid) {
+    List<CurrentAccountDto> accounts = accountService.getAccountsByUserUuid(userUuid);
+    return ResponseEntity.ok(ApiResponse.success(accounts));
   }
 }

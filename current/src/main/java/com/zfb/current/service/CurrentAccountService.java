@@ -6,7 +6,9 @@ import com.zfb.current.repository.CurrentAccountRepository;
 import com.zfb.current.repository.CurrentTransactionRepository;
 import com.zfb.exception.BusinessException;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -58,6 +60,19 @@ public class CurrentAccountService {
             .orElseThrow(() -> new BusinessException("account not found"));
 
     return CurrentAccountDto.from(account);
+  }
+
+  /**
+   * get a list of current accounts by user uuid
+   *
+   * @param userUuid
+   * @return
+   */
+  @Transactional(readOnly = true)
+  public List<CurrentAccountDto> getAccountsByUserUuid(String userUuid) {
+    return accountRepository.findByUserUuid(userUuid).stream()
+        .map(CurrentAccountDto::from)
+        .collect(Collectors.toList());
   }
 
   /**
