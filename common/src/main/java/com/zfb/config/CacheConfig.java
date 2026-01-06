@@ -17,9 +17,9 @@ public class CacheConfig {
 
   @Bean
   public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
-    RedisCacheConfiguration config =
+    RedisCacheConfiguration defaultConfig =
         RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(10))
+            .entryTtl(Duration.ofMinutes(1))
             .serializeKeysWith(
                 RedisSerializationContext.SerializationPair.fromSerializer(
                     RedisSerializer.string()))
@@ -28,7 +28,7 @@ public class CacheConfig {
             .disableCachingNullValues();
 
     return RedisCacheManager.builder(redisConnectionFactory)
-        .cacheDefaults(config)
+        .cacheDefaults(defaultConfig)
         .transactionAware()
         .build();
   }
