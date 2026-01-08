@@ -14,7 +14,7 @@ public class BusinessException extends RuntimeException {
    */
   public BusinessException(String message) {
     super(message);
-    this.code = BusinessErrorCode.BUSINESS_ERROR.getCode();
+    this.code = BusinessErrorCode.BUSINESS_ERROR.getMessage();
   }
 
   /**
@@ -23,9 +23,9 @@ public class BusinessException extends RuntimeException {
    * @param code error code
    * @param message message describing result of request
    */
-  public BusinessException(String code, String message) {
+  public BusinessException(BusinessErrorCode code, String message) {
     super(message);
-    this.code = code;
+    this.code = code.getMessage();
   }
 
   /**
@@ -36,7 +36,7 @@ public class BusinessException extends RuntimeException {
    */
   public BusinessException(String message, Throwable cause) {
     super(message, cause);
-    this.code = BusinessErrorCode.BUSINESS_ERROR.getCode();
+    this.code = BusinessErrorCode.BUSINESS_ERROR.getMessage();
   }
 
   /**

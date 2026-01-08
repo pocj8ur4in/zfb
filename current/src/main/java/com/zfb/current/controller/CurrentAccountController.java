@@ -27,8 +27,7 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<CurrentAccountDto>> createAccount(
       @Valid @RequestBody CreateAccountRequest request) {
     CurrentAccountDto account = accountService.createAccount(request);
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(ApiResponse.success("account created successfully", account));
+    return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(account));
   }
 
   @GetMapping("/{accountUuid}")
@@ -38,7 +37,7 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<CurrentAccountDto>> getAccount(
       @PathVariable String accountUuid) {
     CurrentAccountDto account = accountService.getAccount(accountUuid);
-    return ResponseEntity.ok(ApiResponse.success(account));
+    return ResponseEntity.ok(ApiResponse.of(account));
   }
 
   @GetMapping("/user/{userUuid}")
@@ -48,7 +47,7 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<List<CurrentAccountDto>>> getAccountsByUserUuid(
       @PathVariable String userUuid) {
     List<CurrentAccountDto> accounts = accountService.getAccountsByUserUuid(userUuid);
-    return ResponseEntity.ok(ApiResponse.success(accounts));
+    return ResponseEntity.ok(ApiResponse.of(accounts));
   }
 
   @PostMapping("/{accountUuid}/withdraw")
@@ -58,7 +57,7 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<CurrentTransactionDto>> withdraw(
       @PathVariable String accountUuid, @Valid @RequestBody WithdrawRequest request) {
     CurrentTransactionDto transaction = accountService.withdraw(accountUuid, request);
-    return ResponseEntity.ok(ApiResponse.success("withdraw completed successfully", transaction));
+    return ResponseEntity.ok(ApiResponse.of(transaction));
   }
 
   @PostMapping("/{accountUuid}/deposit")
@@ -68,7 +67,7 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<CurrentTransactionDto>> deposit(
       @PathVariable String accountUuid, @Valid @RequestBody DepositRequest request) {
     CurrentTransactionDto transaction = accountService.deposit(accountUuid, request);
-    return ResponseEntity.ok(ApiResponse.success("deposit completed successfully", transaction));
+    return ResponseEntity.ok(ApiResponse.of(transaction));
   }
 
   @PostMapping("/transactions/{transactionUuid}/refund")
@@ -78,7 +77,7 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<CurrentTransactionDto>> refund(
       @PathVariable String transactionUuid, @RequestParam String reason) {
     CurrentTransactionDto transaction = accountService.refund(transactionUuid, reason);
-    return ResponseEntity.ok(ApiResponse.success("refund completed", transaction));
+    return ResponseEntity.ok(ApiResponse.of(transaction));
   }
 
   @GetMapping("/{accountUuid}/transactions")
@@ -89,7 +88,7 @@ public class CurrentAccountController {
       @PathVariable String accountUuid, Pageable pageable) {
     Page<CurrentTransactionDto> transactions =
         accountService.getTransactionHistory(accountUuid, pageable);
-    return ResponseEntity.ok(ApiResponse.success(transactions));
+    return ResponseEntity.ok(ApiResponse.of(transactions));
   }
 
   @GetMapping("/transactions/{transactionUuid}/verify")
@@ -99,7 +98,7 @@ public class CurrentAccountController {
   public ResponseEntity<ApiResponse<TransactionVerification>> verifyByTransactionUuid(
       @PathVariable String transactionUuid) {
     TransactionVerification verification = accountService.verifyByTransactionUuid(transactionUuid);
-    return ResponseEntity.ok(ApiResponse.success(verification));
+    return ResponseEntity.ok(ApiResponse.of(verification));
   }
 
   @GetMapping("/transactions/verify")
@@ -110,6 +109,6 @@ public class CurrentAccountController {
       @RequestParam String clientRequestUuid) {
     TransactionVerification verification =
         accountService.verifyByClientRequestUuid(clientRequestUuid);
-    return ResponseEntity.ok(ApiResponse.success(verification));
+    return ResponseEntity.ok(ApiResponse.of(verification));
   }
 }

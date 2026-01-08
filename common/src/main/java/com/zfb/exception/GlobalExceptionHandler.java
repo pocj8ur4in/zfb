@@ -1,16 +1,17 @@
 package com.zfb.exception;
 
-import com.zfb.dto.ApiResponse;
-import jakarta.validation.ConstraintViolation;
+import com.zfb.dto.ErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -28,171 +29,336 @@ public class GlobalExceptionHandler {
    * Handle for business logic exceptions
    *
    * @param e BusinessException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(BusinessException.class)
-  public ResponseEntity<ApiResponse<Object>> handleBusinessException(BusinessException e) {
+  public ResponseEntity<ErrorResponse> handleBusinessException(
+      BusinessException e, HttpServletRequest request) {
     log.warn("Business exception occurred: {}", e.getMessage(), e);
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.BAD_REQUEST, e.getCode(), e.getMessage()).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for validation exceptions
    *
    * @param e MethodArgumentNotValidException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValid(
-      MethodArgumentNotValidException e) {
-    String message =
-        e.getBindingResult().getFieldErrors().stream()
-            .map(FieldError::getDefaultMessage)
-            .collect(Collectors.joining(", "));
-    log.warn("Validation error: {}", message);
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message));
+  public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+      MethodArgumentNotValidException e, HttpServletRequest request) {
+    Map<String, Object> errors = new HashMap<>();
+    e.getBindingResult()
+        .getFieldErrors()
+        .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+
+    String detail = "Validation failed for " + errors.size() + " field(s)";
+    log.warn("Validation error: {}", errors);
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", detail, errors).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for binding exceptions
    *
    * @param e BindException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(BindException.class)
-  public ResponseEntity<ApiResponse<Object>> handleBindException(BindException e) {
-    String message =
-        e.getBindingResult().getFieldErrors().stream()
-            .map(FieldError::getDefaultMessage)
-            .collect(Collectors.joining(", "));
-    log.warn("Bind error: {}", message);
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message));
+  public ResponseEntity<ErrorResponse> handleBindException(
+      BindException e, HttpServletRequest request) {
+    Map<String, Object> errors = new HashMap<>();
+    e.getBindingResult()
+        .getFieldErrors()
+        .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+
+    String detail = "Binding failed for " + errors.size() + " field(s)";
+    log.warn("Bind error: {}", errors);
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.BAD_REQUEST, "BIND_ERROR", detail, errors).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for constraint violation exceptions
    *
    * @param e ConstraintViolationException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(ConstraintViolationException.class)
-  public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(
-      ConstraintViolationException e) {
-    String message =
-        e.getConstraintViolations().stream()
-            .map(ConstraintViolation::getMessage)
-            .collect(Collectors.joining(", "));
-    log.warn("Constraint violation: {}", message);
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(message));
+  public ResponseEntity<ErrorResponse> handleConstraintViolation(
+      ConstraintViolationException e, HttpServletRequest request) {
+    Map<String, Object> violations = new HashMap<>();
+    e.getConstraintViolations()
+        .forEach(
+            violation ->
+                violations.put(violation.getPropertyPath().toString(), violation.getMessage()));
+
+    String detail = "Constraint violation for " + violations.size() + " field(s)";
+    log.warn("Constraint violation: {}", violations);
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.BAD_REQUEST, "CONSTRAINT_VIOLATION", detail, violations)
+            .toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for HTTP message not readable exceptions
    *
    * @param e HttpMessageNotReadableException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(HttpMessageNotReadableException.class)
-  public ResponseEntity<ApiResponse<Object>> handleHttpMessageNotReadable(
-      HttpMessageNotReadableException e) {
+  public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+      HttpMessageNotReadableException e, HttpServletRequest request) {
     log.warn("HTTP message not readable: {}", e.getMessage());
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(
+                HttpStatus.BAD_REQUEST,
+                "MESSAGE_NOT_READABLE",
+                "Request body is not readable or malformed")
+            .toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(ApiResponse.error("Request body is not readable"));
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for missing servlet request parameter exceptions
    *
    * @param e MissingServletRequestParameterException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(MissingServletRequestParameterException.class)
-  public ResponseEntity<ApiResponse<Object>> handleMissingServletRequestParameter(
-      MissingServletRequestParameterException e) {
+  public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(
+      MissingServletRequestParameterException e, HttpServletRequest request) {
     log.warn("Missing request parameter: {}", e.getMessage());
+
+    String detail =
+        String.format(
+            "Required parameter '%s' of type '%s' is missing",
+            e.getParameterName(), e.getParameterType());
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.BAD_REQUEST, "MISSING_PARAMETER", detail).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(ApiResponse.error("Required parameter is missing: " + e.getParameterName()));
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for method argument type mismatch exceptions
    *
    * @param e MethodArgumentTypeMismatchException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-  public ResponseEntity<ApiResponse<Object>> handleMethodArgumentTypeMismatch(
-      MethodArgumentTypeMismatchException e) {
+  public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(
+      MethodArgumentTypeMismatchException e, HttpServletRequest request) {
     log.warn("Method argument type mismatch: {}", e.getMessage());
+
+    String detail =
+        String.format(
+            "Parameter '%s' should be of type '%s'",
+            e.getName(),
+            e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "unknown");
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.BAD_REQUEST, "TYPE_MISMATCH", detail).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(ApiResponse.error("Parameter type is not valid: " + e.getName()));
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for HTTP method not supported exceptions
    *
    * @param e HttpRequestMethodNotSupportedException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-  public ResponseEntity<ApiResponse<Object>> handleHttpRequestMethodNotSupported(
-      HttpRequestMethodNotSupportedException e) {
+  public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupported(
+      HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
     log.warn("HTTP method not supported: {}", e.getMessage());
+
+    String detail =
+        String.format(
+            "Method '%s' is not supported for this endpoint. Supported methods: %s",
+            e.getMethod(), e.getSupportedHttpMethods());
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", detail).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
     return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
-        .body(ApiResponse.error("Unsupported HTTP method: " + e.getMethod()));
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for no handler found exceptions
    *
    * @param e NoHandlerFoundException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(NoHandlerFoundException.class)
-  public ResponseEntity<ApiResponse<Object>> handleNoHandlerFoundException(
-      NoHandlerFoundException e) {
+  public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(
+      NoHandlerFoundException e, HttpServletRequest request) {
     log.warn("No handler found: {}", e.getMessage());
+
+    String detail =
+        String.format("No endpoint found for '%s %s'", e.getHttpMethod(), e.getRequestURL());
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.NOT_FOUND, "NOT_FOUND", detail).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
-        .body(ApiResponse.error("Requested resource not found"));
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for distributed lock acquisition failures
    *
    * @param e LockAcquisitionException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(com.zfb.lock.LockAcquisitionException.class)
-  public ResponseEntity<ApiResponse<Object>> handleLockAcquisitionException(
-      com.zfb.lock.LockAcquisitionException e) {
+  public ResponseEntity<ErrorResponse> handleLockAcquisitionException(
+      com.zfb.lock.LockAcquisitionException e, HttpServletRequest request) {
     log.warn("Lock acquisition failed: {}", e.getMessage());
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "LOCK_ACQUISITION_FAILED",
+                "Resource is temporarily unavailable due to concurrent access. Please retry.")
+            .toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-        .body(ApiResponse.error("Resource is temporarily unavailable due to concurrent access"));
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for illegal argument exceptions
    *
    * @param e IllegalArgumentException
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
-      IllegalArgumentException e) {
+  public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+      IllegalArgumentException e, HttpServletRequest request) {
     log.warn("Illegal argument: {}", e.getMessage(), e);
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(e.getMessage()));
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.BAD_REQUEST, "ILLEGAL_ARGUMENT", e.getMessage()).toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
+  }
+
+  /**
+   * Handle for service unavailable exceptions
+   *
+   * @param e ServiceUnavailableException
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
+   */
+  @ExceptionHandler(ServiceUnavailableException.class)
+  public ResponseEntity<ErrorResponse> handleServiceUnavailable(
+      ServiceUnavailableException e, HttpServletRequest request) {
+    log.warn("Service unavailable: {}", e.getMessage(), e);
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", e.getMessage())
+            .toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 
   /**
    * Handle for unexpected exceptions
    *
    * @param e Exception
-   * @return ResponseEntity with ApiResponse
+   * @param request HttpServletRequest
+   * @return ResponseEntity with ErrorResponse
    */
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ApiResponse<Object>> handleException(Exception e) {
+  public ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
     log.error("Unexpected error occurred", e);
+
+    ErrorResponse errorResponse =
+        ErrorResponse.of(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "INTERNAL_SERVER_ERROR",
+                "An unexpected error occurred. Please contact support if the problem persists.")
+            .toBuilder()
+            .instance(request.getRequestURI())
+            .build();
+
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(ApiResponse.error("Internal server error occurred"));
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(errorResponse);
   }
 }
