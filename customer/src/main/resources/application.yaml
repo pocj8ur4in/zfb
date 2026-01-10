@@ -5,8 +5,9 @@ spring:
     active: local
     include: common
   config:
-    import: classpath:application-common.yaml
+    import:
+      - classpath:application-common.yaml
+      - optional:classpath:application-${spring.profiles.active}.yaml
 
 server:
   port: 8084
-
