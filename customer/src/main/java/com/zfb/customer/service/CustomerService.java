@@ -1,6 +1,7 @@
 package com.zfb.customer.service;
 
 import com.zfb.customer.domain.Customer;
+import com.zfb.customer.domain.CustomerStatus;
 import com.zfb.customer.dto.CustomerDto;
 import com.zfb.customer.dto.RegisterRequest;
 import com.zfb.customer.repository.CustomerRepository;
@@ -54,6 +55,16 @@ public class CustomerService {
     Customer customer =
         customerRepository
             .findByUuid(uuid)
+            .orElseThrow(() -> new BusinessException("customer not found"));
+
+    return CustomerDto.from(customer);
+  }
+
+  @Transactional(readOnly = true)
+  public CustomerDto getCustomerByEmail(String email) {
+    Customer customer =
+        customerRepository
+            .findByEmailAndStatus(email, CustomerStatus.ACTIVE)
             .orElseThrow(() -> new BusinessException("customer not found"));
 
     return CustomerDto.from(customer);

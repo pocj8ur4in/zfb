@@ -61,6 +61,7 @@ public class Customer extends BaseColumn {
 
   /**
    * update password
+   *
    * @param newPassword the new password
    */
   public void updatePassword(String newPassword) {
@@ -69,6 +70,7 @@ public class Customer extends BaseColumn {
 
   /**
    * update profile
+   *
    * @param name the new name
    * @param phoneNumber the new phone number
    */
@@ -77,23 +79,17 @@ public class Customer extends BaseColumn {
     this.phoneNumber = phoneNumber;
   }
 
-  /**
-   * deactivate customer
-   */
+  /** deactivate customer */
   public void deactivate() {
     this.status = CustomerStatus.INACTIVE;
   }
 
-  /**
-   * suspend customer
-   */
+  /** suspend customer */
   public void suspend() {
     this.status = CustomerStatus.SUSPENDED;
   }
 
-  /**
-   * activate customer
-   */
+  /** activate customer */
   public void activate() {
     this.status = CustomerStatus.ACTIVE;
   }

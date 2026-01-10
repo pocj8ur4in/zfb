@@ -39,4 +39,14 @@ public class CustomerController {
 
     return ResponseEntity.ok(ApiResponse.of(customerService.getCustomerByUuid(uuid)));
   }
+
+  @GetMapping("/email/{email}")
+  @Operation(
+      summary = "Get customer by email",
+      description = "Retrieve customer information by email")
+  public ResponseEntity<ApiResponse<CustomerDto>> getCustomerByEmail(@PathVariable String email) {
+    log.info("get customer by email: email={}", email);
+
+    return ResponseEntity.ok(ApiResponse.of(customerService.getCustomerByEmail(email)));
+  }
 }
