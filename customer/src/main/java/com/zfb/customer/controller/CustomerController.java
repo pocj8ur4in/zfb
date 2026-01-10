@@ -29,4 +29,14 @@ public class CustomerController {
 
     return ResponseEntity.ok(ApiResponse.of(customerService.register(request)));
   }
+
+  @GetMapping("/{uuid}")
+  @Operation(
+      summary = "Get customer by uuid",
+      description = "Retrieve customer information by uuid")
+  public ResponseEntity<ApiResponse<CustomerDto>> getCustomer(@PathVariable String uuid) {
+    log.info("get customer: uuid={}", uuid);
+
+    return ResponseEntity.ok(ApiResponse.of(customerService.getCustomerByUuid(uuid)));
+  }
 }

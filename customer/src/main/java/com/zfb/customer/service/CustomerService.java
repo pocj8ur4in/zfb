@@ -48,4 +48,14 @@ public class CustomerService {
 
     return CustomerDto.from(saved);
   }
+
+  @Transactional(readOnly = true)
+  public CustomerDto getCustomerByUuid(String uuid) {
+    Customer customer =
+        customerRepository
+            .findByUuid(uuid)
+            .orElseThrow(() -> new BusinessException("customer not found"));
+
+    return CustomerDto.from(customer);
+  }
 }
