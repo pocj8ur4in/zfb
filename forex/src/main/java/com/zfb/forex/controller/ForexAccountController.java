@@ -1,0 +1,91 @@
+package com.zfb.forex.controller;
+
+import com.zfb.dto.ApiResponse;
+import com.zfb.forex.dto.*;
+import com.zfb.forex.service.ForexService;
+import jakarta.validation.Valid;
+import java.math.BigDecimal;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/forex/accounts")
+@RequiredArgsConstructor
+public class ForexAccountController {
+
+  private final ForexService accountService;
+
+  @PostMapping
+  public ResponseEntity<ApiResponse<ForexAccountDto>> createAccount(
+      @Valid @RequestBody CreateAccountRequest request) {
+    ForexAccountDto account = accountService.createAccount(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(account));
+  }
+
+  @GetMapping("/{uuid}")
+  public ResponseEntity<ApiResponse<ForexAccountDto>> getAccount(@PathVariable String uuid) {
+    ForexAccountDto account = accountService.getAccount(uuid);
+    return ResponseEntity.ok(ApiResponse.of(account));
+  }
+
+  @GetMapping("/user/{userUuid}")
+  public ResponseEntity<ApiResponse<List<ForexAccountDto>>> getAccountsByUserUuid(
+      @PathVariable String userUuid) {
+    List<ForexAccountDto> accounts = accountService.getAccountsByUserUuid(userUuid);
+    return ResponseEntity.ok(ApiResponse.of(accounts));
+  }
+
+  @GetMapping("/{uuid}/balance")
+  public ResponseEntity<ApiResponse<BigDecimal>> getBalance(@PathVariable String uuid) {
+    BigDecimal balance = accountService.getBalance(uuid);
+    return ResponseEntity.ok(ApiResponse.of(balance));
+  }
+
+  @PostMapping("/{uuid}/withdraw")
+  public ResponseEntity<ApiResponse<ForexTransactionDto>> withdraw(
+      @PathVariable String uuid, @Valid @RequestBody WithdrawRequest request) {
+    ForexTransactionDto transaction = accountService.withdraw(uuid, request);
+    return ResponseEntity.ok(ApiResponse.of(transaction));
+  }
+
+  @PostMapping("/{uuid}/deposit")
+  public ResponseEntity<ApiResponse<ForexTransactionDto>> deposit(
+      @PathVariable String uuid, @Valid @RequestBody DepositRequest request) {
+    ForexTransactionDto transaction = accountService.deposit(uuid, request);
+    return ResponseEntity.ok(ApiResponse.of(transaction));
+  }
+
+  @PostMapping("/transactions/{transactionUuid}/refund")
+  public ResponseEntity<ApiResponse<ForexTransactionDto>> refund(
+      @PathVariable String transactionUuid, @RequestParam String reason) {
+    ForexTransactionDto transaction = accountService.refund(transactionUuid, reason);
+    return ResponseEntity.ok(ApiResponse.of(transaction));
+  }
+
+  @GetMapping("/{uuid}/transactions")
+  public ResponseEntity<ApiResponse<Page<ForexTransactionDto>>> getTransactionHistory(
+      @PathVariable String uuid, Pageable pageable) {
+    Page<ForexTransactionDto> transactions =
+        accountService.getTransactionHistory(uuid, pageable);
+    return ResponseEntity.ok(ApiResponse.of(transactions));
+  }
+
+  @GetMapping("/transactions/{transactionUuid}/verify")
+  public ResponseEntity<ApiResponse<TransactionVerification>> verifyTransaction(
+      @PathVariable String transactionUuid) {
+    TransactionVerification verification = accountService.verifyTransaction(transactionUuid);
+    return ResponseEntity.ok(ApiResponse.of(verification));
+  }
+
+  @GetMapping("/transactions/verify")
+  public ResponseEntity<ApiResponse<TransactionVerification>> verifyByClientRequestId(
+      @RequestParam String clientRequestId) {
+    TransactionVerification verification = accountService.verifyByClientRequestId(clientRequestId);
+    return ResponseEntity.ok(ApiResponse.of(verification));
+  }
+}
