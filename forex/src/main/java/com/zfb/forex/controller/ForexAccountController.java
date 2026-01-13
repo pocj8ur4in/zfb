@@ -74,4 +74,11 @@ public class ForexAccountController {
         accountService.getTransactionHistory(uuid, pageable);
     return ResponseEntity.ok(ApiResponse.of(transactions));
   }
+
+  @GetMapping("/transactions/{transactionUuid}/verify")
+  public ResponseEntity<ApiResponse<TransactionVerification>> verifyTransaction(
+      @PathVariable String transactionUuid) {
+    TransactionVerification verification = accountService.verifyTransaction(transactionUuid);
+    return ResponseEntity.ok(ApiResponse.of(verification));
+  }
 }

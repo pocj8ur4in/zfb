@@ -256,6 +256,17 @@ public class ForexService {
   }
 
   @Transactional(readOnly = true)
+  public TransactionVerification verifyTransaction(String transactionUuid) {
+    ForexTransaction transaction = transactionRepository.findByUuid(transactionUuid).orElse(null);
+
+    if (transaction == null) {
+      return TransactionVerification.notFound();
+    }
+
+    return TransactionVerification.from(transaction);
+  }
+
+  @Transactional(readOnly = true)
   public Page<ForexTransactionDto> getTransactionHistory(
       String accountUuid, Pageable pageable) {
     return transactionRepository
