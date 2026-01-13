@@ -29,4 +29,3 @@ public class OpenApiConfig {
                 new Server().url("http://localhost:" + serverPort).description("Local Server")));
   }
 }
-
