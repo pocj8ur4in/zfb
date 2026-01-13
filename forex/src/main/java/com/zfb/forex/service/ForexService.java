@@ -2,6 +2,7 @@ package com.zfb.forex.service;
 
 import com.zfb.exception.BusinessException;
 import com.zfb.forex.domain.ForexAccount;
+import com.zfb.forex.domain.ForexTransaction;
 import com.zfb.forex.dto.*;
 import com.zfb.forex.repository.ForexAccountRepository;
 import com.zfb.forex.repository.ForexTransactionRepository;
@@ -122,6 +123,76 @@ public class ForexService {
           ForexTransaction.builder()
               .accountUuid(account.getUuid())
               .type(ForexTransaction.TransactionType.WITHDRAW)
+              .amount(request.getAmount())
+              .balanceBefore(balanceBefore)
+              .balanceAfter(balanceBefore)
+              .status(ForexTransaction.TransactionStatus.FAILED)
+              .clientRequestId(clientRequestId)
+              .sagaId(request.getSagaId())
+              .description(request.getDescription())
+              .build();
+
+      failedTransaction.fail(e.getMessage());
+      transactionRepository.save(failedTransaction);
+
+      throw e;
+    }
+  }
+
+  @Transactional
+  public ForexTransactionDto deposit(String uuid, DepositRequest request) {
+    String clientRequestId = request.getClientRequestId();
+
+    if (clientRequestId != null) {
+      ForexTransaction existing =
+          transactionRepository.findByClientRequestId(clientRequestId).orElse(null);
+      if (existing != null) {
+        log.info("duplicate deposit request detected: {}", clientRequestId);
+        return ForexTransactionDto.from(existing);
+      }
+    }
+
+    ForexAccount account =
+        accountRepository
+            .findByUuidForUpdate(uuid)
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    BigDecimal balanceBefore = account.getBalance();
+
+    try {
+      account.deposit(request.getAmount());
+
+      ForexTransaction transaction =
+          ForexTransaction.builder()
+              .accountUuid(account.getUuid())
+              .type(ForexTransaction.TransactionType.DEPOSIT)
+              .amount(request.getAmount())
+              .balanceBefore(balanceBefore)
+              .balanceAfter(account.getBalance())
+              .status(ForexTransaction.TransactionStatus.COMPLETED)
+              .clientRequestId(clientRequestId)
+              .sagaId(request.getSagaId())
+              .description(request.getDescription())
+              .build();
+
+      transaction.complete();
+      ForexTransaction saved = transactionRepository.save(transaction);
+
+      log.info(
+          "deposit completed: accountUuid={}, amount={}, txUuid={}",
+          uuid,
+          request.getAmount(),
+          saved.getUuid());
+
+      return ForexTransactionDto.from(saved);
+
+    } catch (Exception e) {
+      log.error("deposit failed: accountUuid={}, amount={}", uuid, request.getAmount(), e);
+
+      ForexTransaction failedTransaction =
+          ForexTransaction.builder()
+              .accountUuid(account.getUuid())
+              .type(ForexTransaction.TransactionType.DEPOSIT)
               .amount(request.getAmount())
               .balanceBefore(balanceBefore)
               .balanceAfter(balanceBefore)
