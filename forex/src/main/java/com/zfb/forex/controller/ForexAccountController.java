@@ -23,9 +23,9 @@ public class ForexAccountController {
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(account));
   }
 
-  @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<ForexAccountDto>> getAccount(@PathVariable Long id) {
-    ForexAccountDto account = accountService.getAccount(id);
+  @GetMapping("/{uuid}")
+  public ResponseEntity<ApiResponse<ForexAccountDto>> getAccount(@PathVariable String uuid) {
+    ForexAccountDto account = accountService.getAccount(uuid);
     return ResponseEntity.ok(ApiResponse.of(account));
   }
 }

@@ -1,5 +1,6 @@
 package com.zfb.forex.service;
 
+import com.zfb.exception.BusinessException;
 import com.zfb.forex.domain.ForexAccount;
 import com.zfb.forex.dto.*;
 import com.zfb.forex.repository.ForexAccountRepository;
@@ -36,6 +37,16 @@ public class ForexService {
     log.info("created forex account: {}", saved.getAccountNumber());
 
     return ForexAccountDto.from(saved);
+  }
+
+  @Transactional(readOnly = true)
+  public ForexAccountDto getAccount(String uuid) {
+    ForexAccount account =
+        accountRepository
+            .findByUuid(uuid)
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    return ForexAccountDto.from(account);
   }
 
   private String generateAccountNumber() {
