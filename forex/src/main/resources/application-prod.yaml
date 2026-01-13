@@ -1,0 +1,57 @@
+server:
+  port: 8082
+  shutdown: graceful
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+  docker:
+    compose:
+      enabled: false
+  datasource:
+    master:
+      jdbc-url: ${DB_MASTER_URL}
+      username: ${DB_MASTER_USER}
+      password: ${DB_MASTER_PASSWORD}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 5
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+    replica:
+      jdbc-url: ${DB_REPLICA_URL}
+      username: ${DB_REPLICA_USER}
+      password: ${DB_REPLICA_PASSWORD}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        maximum-pool-size: 20
+        minimum-idle: 10
+        connection-timeout: 30000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+        read-only: true
+
+logging:
+  level:
+    root: WARN
+    com.zfb: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: never

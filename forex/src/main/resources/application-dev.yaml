@@ -1,0 +1,33 @@
+server:
+  port: 8082
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+  docker:
+    compose:
+      enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.zfb: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,circuitbreakers,ratelimiters
+  endpoint:
+    health:
+      show-details: when-authorized
+
