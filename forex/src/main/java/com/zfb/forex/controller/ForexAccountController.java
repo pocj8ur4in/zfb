@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,5 +65,13 @@ public class ForexAccountController {
       @PathVariable String transactionUuid, @RequestParam String reason) {
     ForexTransactionDto transaction = accountService.refund(transactionUuid, reason);
     return ResponseEntity.ok(ApiResponse.of(transaction));
+  }
+
+  @GetMapping("/{uuid}/transactions")
+  public ResponseEntity<ApiResponse<Page<ForexTransactionDto>>> getTransactionHistory(
+      @PathVariable String uuid, Pageable pageable) {
+    Page<ForexTransactionDto> transactions =
+        accountService.getTransactionHistory(uuid, pageable);
+    return ResponseEntity.ok(ApiResponse.of(transactions));
   }
 }

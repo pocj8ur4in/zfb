@@ -12,6 +12,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -251,6 +253,14 @@ public class ForexService {
         "refund completed: originalTxUuid={}, refundTxUuid={}", transactionUuid, saved.getUuid());
 
     return ForexTransactionDto.from(saved);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<ForexTransactionDto> getTransactionHistory(
+      String accountUuid, Pageable pageable) {
+    return transactionRepository
+        .findByAccountUuidOrderByCreatedAtDesc(accountUuid, pageable)
+        .map(ForexTransactionDto::from);
   }
 
   private String generateAccountNumber() {
