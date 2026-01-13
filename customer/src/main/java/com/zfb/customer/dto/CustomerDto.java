@@ -4,13 +4,11 @@ import com.zfb.customer.domain.Customer;
 import com.zfb.customer.domain.CustomerStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
 public class CustomerDto {
   private Long id;
   private String email;
@@ -22,14 +20,15 @@ public class CustomerDto {
   private LocalDateTime createdAt;
 
   public static CustomerDto from(Customer customer) {
-    return new CustomerDto(
-        customer.getId(),
-        customer.getEmail(),
-        customer.getUsername(),
-        customer.getName(),
-        customer.getPhoneNumber(),
-        customer.getDateOfBirth(),
-        customer.getStatus(),
-        customer.getCreatedAt());
+    CustomerDto dto = new CustomerDto();
+    dto.id = customer.getId();
+    dto.email = customer.getEmail();
+    dto.username = customer.getUsername();
+    dto.name = customer.getName();
+    dto.phoneNumber = customer.getPhoneNumber();
+    dto.dateOfBirth = customer.getDateOfBirth();
+    dto.status = customer.getStatus();
+    dto.createdAt = customer.getCreatedAt();
+    return dto;
   }
 }

@@ -61,6 +61,16 @@ public class CustomerService {
   }
 
   @Transactional(readOnly = true)
+  public CustomerDto getCustomerByEmail(String email) {
+    Customer customer =
+        customerRepository
+            .findByEmailAndStatus(email, CustomerStatus.ACTIVE)
+            .orElseThrow(() -> new BusinessException("customer not found"));
+
+    return CustomerDto.from(customer);
+  }
+
+  @Transactional(readOnly = true)
   public boolean validatePassword(String email, String rawPassword) {
     Customer customer =
         customerRepository
