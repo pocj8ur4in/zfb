@@ -1,6 +1,7 @@
 package com.zfb.customer.controller;
 
 import com.zfb.customer.dto.CustomerDto;
+import com.zfb.customer.dto.LoginRequest;
 import com.zfb.customer.dto.RegisterRequest;
 import com.zfb.customer.service.CustomerService;
 import com.zfb.dto.ApiResponse;
@@ -38,5 +39,18 @@ public class CustomerController {
     log.info("get customer: uuid={}", uuid);
 
     return ResponseEntity.ok(ApiResponse.of(customerService.getCustomerByUuid(uuid)));
+  }
+
+  @PostMapping("/validate")
+  @Operation(
+      summary = "Validate customer password",
+      description = "Validate customer email and password for authentication")
+  public ResponseEntity<ApiResponse<Boolean>> validatePassword(
+      @Valid @RequestBody LoginRequest request) {
+    log.info("validate password: email={}", request.getEmail());
+
+    return ResponseEntity.ok(
+        ApiResponse.of(
+            customerService.validatePassword(request.getEmail(), request.getPassword())));
   }
 }

@@ -1,6 +1,7 @@
 package com.zfb.customer.service;
 
 import com.zfb.customer.domain.Customer;
+import com.zfb.customer.domain.CustomerStatus;
 import com.zfb.customer.dto.CustomerDto;
 import com.zfb.customer.dto.RegisterRequest;
 import com.zfb.customer.repository.CustomerRepository;
@@ -57,5 +58,15 @@ public class CustomerService {
             .orElseThrow(() -> new BusinessException("customer not found"));
 
     return CustomerDto.from(customer);
+  }
+
+  @Transactional(readOnly = true)
+  public boolean validatePassword(String email, String rawPassword) {
+    Customer customer =
+        customerRepository
+            .findByEmailAndStatus(email, CustomerStatus.ACTIVE)
+            .orElseThrow(() -> new BusinessException("customer not found"));
+
+    return passwordEncoder.matches(rawPassword, customer.getPassword());
   }
 }
