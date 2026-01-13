@@ -58,6 +58,16 @@ public class ForexService {
         .collect(Collectors.toList());
   }
 
+  @Transactional(readOnly = true)
+  public BigDecimal getBalance(String uuid) {
+    ForexAccount account =
+        accountRepository
+            .findByUuid(uuid)
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    return account.getBalance();
+  }
+
   private String generateAccountNumber() {
     String prefix = "FX";
     String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();

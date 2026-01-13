@@ -10,8 +10,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ForexAccountDto {
-  @JsonIgnore
-  private Long id;
+  @JsonIgnore private Long id;
   private String uuid;
   private String accountNumber;
   private Long userId;
