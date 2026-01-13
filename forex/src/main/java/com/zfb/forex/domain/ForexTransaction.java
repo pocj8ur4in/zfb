@@ -17,15 +17,15 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "forex_transactions",
     indexes = {
-      @Index(name = "idx_account_id", columnList = "accountId"),
+      @Index(name = "idx_account_uuid", columnList = "accountUuid"),
       @Index(name = "idx_client_request_id", columnList = "clientRequestId"),
       @Index(name = "idx_status_created", columnList = "status,createdAt")
     })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ForexTransaction extends BaseColumn {
-  @Column(nullable = false)
-  private Long accountId;
+  @Column(nullable = false, length = 36)
+  private String accountUuid;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
@@ -55,7 +55,7 @@ public class ForexTransaction extends BaseColumn {
 
   @Builder
   public ForexTransaction(
-      Long accountId,
+      String accountUuid,
       TransactionType type,
       BigDecimal amount,
       BigDecimal balanceBefore,
@@ -64,7 +64,7 @@ public class ForexTransaction extends BaseColumn {
       String clientRequestId,
       String sagaId,
       String description) {
-    this.accountId = accountId;
+    this.accountUuid = accountUuid;
     this.type = type;
     this.amount = amount;
     this.balanceBefore = balanceBefore;

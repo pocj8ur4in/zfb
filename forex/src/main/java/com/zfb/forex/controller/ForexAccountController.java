@@ -43,4 +43,11 @@ public class ForexAccountController {
     BigDecimal balance = accountService.getBalance(uuid);
     return ResponseEntity.ok(ApiResponse.of(balance));
   }
+
+  @PostMapping("/{uuid}/withdraw")
+  public ResponseEntity<ApiResponse<ForexTransactionDto>> withdraw(
+      @PathVariable String uuid, @Valid @RequestBody WithdrawRequest request) {
+    ForexTransactionDto transaction = accountService.withdraw(uuid, request);
+    return ResponseEntity.ok(ApiResponse.of(transaction));
+  }
 }
