@@ -81,4 +81,11 @@ public class ForexAccountController {
     TransactionVerification verification = accountService.verifyTransaction(transactionUuid);
     return ResponseEntity.ok(ApiResponse.of(verification));
   }
+
+  @GetMapping("/transactions/verify")
+  public ResponseEntity<ApiResponse<TransactionVerification>> verifyByClientRequestId(
+      @RequestParam String clientRequestId) {
+    TransactionVerification verification = accountService.verifyByClientRequestId(clientRequestId);
+    return ResponseEntity.ok(ApiResponse.of(verification));
+  }
 }
