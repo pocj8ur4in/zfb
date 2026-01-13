@@ -1,7 +1,12 @@
 package com.zfb.forex.controller;
 
-import com.zfb.forex.service.ForexAccountService;
+import com.zfb.dto.ApiResponse;
+import com.zfb.forex.dto.*;
+import com.zfb.forex.service.ForexService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -9,5 +14,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ForexAccountController {
 
-  private final ForexAccountService accountService;
+  private final ForexService accountService;
+
+  @PostMapping
+  public ResponseEntity<ApiResponse<ForexAccountDto>> createAccount(
+      @Valid @RequestBody CreateAccountRequest request) {
+    ForexAccountDto account = accountService.createAccount(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(account));
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<ApiResponse<ForexAccountDto>> getAccount(@PathVariable Long id) {
+    ForexAccountDto account = accountService.getAccount(id);
+    return ResponseEntity.ok(ApiResponse.of(account));
+  }
 }
