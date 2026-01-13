@@ -209,6 +209,50 @@ public class ForexService {
     }
   }
 
+  @Transactional
+  public ForexTransactionDto refund(String transactionUuid, String reason) {
+    ForexTransaction originalTransaction =
+        transactionRepository
+            .findByUuid(transactionUuid)
+            .orElseThrow(() -> new BusinessException("transaction not found"));
+
+    if (originalTransaction.getType() != ForexTransaction.TransactionType.WITHDRAW) {
+      throw new BusinessException("only withdraw transactions can be refunded");
+    }
+
+    if (originalTransaction.getStatus() != ForexTransaction.TransactionStatus.COMPLETED) {
+      throw new BusinessException("only completed transactions can be refunded");
+    }
+
+    ForexAccount account =
+        accountRepository
+            .findByUuidForUpdate(originalTransaction.getAccountUuid())
+            .orElseThrow(() -> new BusinessException("account not found"));
+
+    BigDecimal balanceBefore = account.getBalance();
+    account.deposit(originalTransaction.getAmount());
+
+    ForexTransaction refundTransaction =
+        ForexTransaction.builder()
+            .accountUuid(account.getUuid())
+            .type(ForexTransaction.TransactionType.REFUND)
+            .amount(originalTransaction.getAmount())
+            .balanceBefore(balanceBefore)
+            .balanceAfter(account.getBalance())
+            .status(ForexTransaction.TransactionStatus.COMPLETED)
+            .sagaId(originalTransaction.getSagaId())
+            .description("refund for transaction " + transactionUuid + ": " + reason)
+            .build();
+
+    refundTransaction.complete();
+    ForexTransaction saved = transactionRepository.save(refundTransaction);
+
+    log.info(
+        "refund completed: originalTxUuid={}, refundTxUuid={}", transactionUuid, saved.getUuid());
+
+    return ForexTransactionDto.from(saved);
+  }
+
   private String generateAccountNumber() {
     String prefix = "FX";
     String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();

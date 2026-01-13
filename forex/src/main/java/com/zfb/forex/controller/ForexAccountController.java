@@ -57,4 +57,11 @@ public class ForexAccountController {
     ForexTransactionDto transaction = accountService.deposit(uuid, request);
     return ResponseEntity.ok(ApiResponse.of(transaction));
   }
+
+  @PostMapping("/transactions/{transactionUuid}/refund")
+  public ResponseEntity<ApiResponse<ForexTransactionDto>> refund(
+      @PathVariable String transactionUuid, @RequestParam String reason) {
+    ForexTransactionDto transaction = accountService.refund(transactionUuid, reason);
+    return ResponseEntity.ok(ApiResponse.of(transaction));
+  }
 }
