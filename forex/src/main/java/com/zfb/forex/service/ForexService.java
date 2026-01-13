@@ -6,7 +6,9 @@ import com.zfb.forex.dto.*;
 import com.zfb.forex.repository.ForexAccountRepository;
 import com.zfb.forex.repository.ForexTransactionRepository;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,13 @@ public class ForexService {
             .orElseThrow(() -> new BusinessException("account not found"));
 
     return ForexAccountDto.from(account);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ForexAccountDto> getAccountsByUserUuid(String userUuid) {
+    return accountRepository.findByUserUuid(userUuid).stream()
+        .map(ForexAccountDto::from)
+        .collect(Collectors.toList());
   }
 
   private String generateAccountNumber() {

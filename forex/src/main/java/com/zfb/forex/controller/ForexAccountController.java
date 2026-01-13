@@ -4,6 +4,7 @@ import com.zfb.dto.ApiResponse;
 import com.zfb.forex.dto.*;
 import com.zfb.forex.service.ForexService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,5 +28,12 @@ public class ForexAccountController {
   public ResponseEntity<ApiResponse<ForexAccountDto>> getAccount(@PathVariable String uuid) {
     ForexAccountDto account = accountService.getAccount(uuid);
     return ResponseEntity.ok(ApiResponse.of(account));
+  }
+
+  @GetMapping("/user/{userUuid}")
+  public ResponseEntity<ApiResponse<List<ForexAccountDto>>> getAccountsByUserUuid(
+      @PathVariable String userUuid) {
+    List<ForexAccountDto> accounts = accountService.getAccountsByUserUuid(userUuid);
+    return ResponseEntity.ok(ApiResponse.of(accounts));
   }
 }
