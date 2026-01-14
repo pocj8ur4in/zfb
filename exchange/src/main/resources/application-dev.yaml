@@ -1,0 +1,40 @@
+server:
+  port: 8083
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+  docker:
+    compose:
+      enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.zfb: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,circuitbreakers,ratelimiters
+  endpoint:
+    health:
+      show-details: when-authorized
+
+feign:
+  client:
+    config:
+      current-service:
+        url: ${CURRENT_SERVICE_URL:http://current-service:8081}
+      forex-service:
+        url: ${FOREX_SERVICE_URL:http://forex-service:8082}

@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: zfb-exchange
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    import:
+      - classpath:application-common.yaml
+      - optional:classpath:application-${spring.profiles.active}.yaml
+  docker:
+    compose:
+      file: ../compose.yaml
