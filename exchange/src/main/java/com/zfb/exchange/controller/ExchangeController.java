@@ -20,4 +20,14 @@ public class ExchangeController {
     ExchangeResponse response = exchangeService.getExchangeStatus(clientRequestId);
     return ApiResponse.of(response);
   }
+
+  @GetMapping("/history/{accountUuid}")
+  public ApiResponse<Page<ExchangeResponse>> getExchangeHistory(
+      @PathVariable String accountUuid,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    Page<ExchangeResponse> response = exchangeService.getExchangeHistory(accountUuid, pageable);
+    return ApiResponse.of(response);
+  }
 }

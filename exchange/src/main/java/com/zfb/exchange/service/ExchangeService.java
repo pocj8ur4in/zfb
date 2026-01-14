@@ -27,6 +27,13 @@ public class ExchangeService {
     return toResponse(transaction);
   }
 
+  @Transactional(readOnly = true)
+  public Page<ExchangeResponse> getExchangeHistory(String accountUuid, Pageable pageable) {
+    Page<ExchangeTransaction> transactions =
+        transactionRepository.findByAccountUuid(accountUuid, pageable);
+    return transactions.map(this::toResponse);
+  }
+
   private ExchangeResponse toResponse(ExchangeTransaction transaction) {
     ExchangeResponse response = new ExchangeResponse();
     response.setClientRequestId(transaction.getClientRequestId());
