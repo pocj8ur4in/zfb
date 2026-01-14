@@ -2,10 +2,13 @@ package com.zfb.exchange.controller;
 
 import com.zfb.domain.Currency;
 import com.zfb.dto.ApiResponse;
+import com.zfb.exchange.dto.ExchangeRateCompareRequest;
+import com.zfb.exchange.dto.ExchangeRateCompareResponse;
 import com.zfb.exchange.dto.ExchangeRateResponse;
 import com.zfb.exchange.dto.ExchangeResponse;
 import com.zfb.exchange.service.ExchangeRateService;
 import com.zfb.exchange.service.ExchangeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +44,15 @@ public class ExchangeController {
   public ApiResponse<ExchangeRateResponse> getExchangeRate(
       @PathVariable Currency source, @PathVariable Currency target) {
     ExchangeRateResponse response = exchangeRateService.getLatestRate(source, target);
+    return ApiResponse.of(response);
+  }
+
+  @PostMapping("/rates/compare")
+  public ApiResponse<ExchangeRateCompareResponse> compareExchangeRates(
+      @Valid @RequestBody ExchangeRateCompareRequest request) {
+    ExchangeRateCompareResponse response =
+        exchangeRateService.compareRates(
+            request.getSourceCurrency(), request.getTargetCurrencies(), request.getAmount());
     return ApiResponse.of(response);
   }
 }
