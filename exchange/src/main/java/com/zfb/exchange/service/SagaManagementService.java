@@ -1,6 +1,7 @@
 package com.zfb.exchange.service;
 
 import com.zfb.exchange.domain.ExchangeSaga;
+import com.zfb.exchange.domain.ExchangeSaga.SagaStatus;
 import com.zfb.exchange.dto.SagaDto;
 import com.zfb.exchange.repository.ExchangeSagaRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,11 @@ public class SagaManagementService {
   @Transactional(readOnly = true)
   public Page<SagaDto> getAllSagas(Pageable pageable) {
     return sagaRepository.findAll(pageable).map(this::toDto);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<SagaDto> getSagasByStatus(SagaStatus status, Pageable pageable) {
+    return sagaRepository.findByStatus(status, pageable).map(this::toDto);
   }
 
   private SagaDto toDto(ExchangeSaga saga) {
