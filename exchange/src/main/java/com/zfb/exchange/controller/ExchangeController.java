@@ -5,6 +5,7 @@ import com.zfb.dto.ApiResponse;
 import com.zfb.exchange.dto.ExchangeRateCompareRequest;
 import com.zfb.exchange.dto.ExchangeRateCompareResponse;
 import com.zfb.exchange.dto.ExchangeRateResponse;
+import com.zfb.exchange.dto.ExchangeRequest;
 import com.zfb.exchange.dto.ExchangeResponse;
 import com.zfb.exchange.service.ExchangeRateService;
 import com.zfb.exchange.service.ExchangeService;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +25,13 @@ public class ExchangeController {
 
   private final ExchangeService exchangeService;
   private final ExchangeRateService exchangeRateService;
+
+  @PostMapping
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  public ApiResponse<ExchangeResponse> exchange(@Valid @RequestBody ExchangeRequest request) {
+    ExchangeResponse response = exchangeService.exchange(request);
+    return ApiResponse.of(response);
+  }
 
   @GetMapping("/{clientRequestId}")
   public ApiResponse<ExchangeResponse> getExchangeStatus(@PathVariable String clientRequestId) {

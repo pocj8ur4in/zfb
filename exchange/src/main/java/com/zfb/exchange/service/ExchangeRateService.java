@@ -42,6 +42,26 @@ public class ExchangeRateService {
     return toResponse(rate);
   }
 
+  @Cacheable(
+      value = "exchangeRates",
+      key = "#source.code + '_' + #target.code + '_' + #amount.toString()")
+  @Transactional(readOnly = true)
+  public BigDecimal calculateTargetAmount(Currency source, Currency target, BigDecimal amount) {
+    if (source == target) {
+      return amount;
+    }
+
+    ExchangeRate rate =
+        exchangeRateRepository
+            .findLatestRate(source, target)
+            .orElseThrow(
+                () ->
+                    new BusinessException(
+                        String.format("exchange rate not found for %s to %s", source, target)));
+
+    return amount.multiply(rate.getEffectiveRate()).setScale(2, java.math.RoundingMode.DOWN);
+  }
+
   @Transactional(readOnly = true)
   public ExchangeRateCompareResponse compareRates(
       Currency source, List<Currency> targets, BigDecimal amount) {
